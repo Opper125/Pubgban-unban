@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUBG Account Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .bg-pubg-dark { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f0f23); }
+        .bg-pubg-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+        .text-pubg-gold { color: #ffd700; }
+        .border-pubg-gold { border-color: #ffd700; }
+        .btn-pubg { background: linear-gradient(45deg, #ff6b35, #f7931e); }
+        .btn-pubg:hover { background: linear-gradient(45deg, #e55a2b, #de831a); }
+        .animate-pulse-slow { animation: pulse 3s infinite; }
+        .glass-effect { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.18); }
+    </style>
+</head>
+<body class="bg-pubg-dark text-white min-h-screen">
+    
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass-effect rounded-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <i class="fas fa-gamepad text-6xl text-pubg-gold mb-4"></i>
+                <h1 class="text-3xl font-bold mb-2">PUBG Admin Panel</h1>
+                <p class="text-gray-300">Account Management System</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">
+                        <i class="fas fa-user mr-2"></i>Username
+                    </label>
+                    <input type="text" id="username" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-pubg-gold focus:outline-none" placeholder="Enter username" required>
+                </div>
+                
+                <button type="submit" class="w-full btn-pubg py-3 rounded-lg font-semibold text-white transition-all duration-300 hover:shadow-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center text-sm text-gray-400">
+                <i class="fas fa-shield-alt mr-1"></i>
+                Authorized Access Only
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
+        <!-- Header -->
+        <nav class="glass-effect shadow-lg border-b border-gray-700">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <i class="fas fa-gamepad text-2xl text-pubg-gold mr-3"></i>
+                        <h1 class="text-xl font-bold">PUBG Admin Panel</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm">Welcome, <span class="text-pubg-gold" id="currentUser">OPPER101</span></span>
+                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto p-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass-effect rounded-xl p-6">
+                    <div class="flex items-center">
+                        <div class="bg-blue-500 p-3 rounded-full">
+                            <i class="fas fa-users text-white text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-400">Total Players</p>
+                            <p class="text-2xl font-bold text-blue-400" id="totalPlayers">1,247,856</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6">
+                    <div class="flex items-center">
+                        <div class="bg-red-500 p-3 rounded-full">
+                            <i class="fas fa-ban text-white text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-400">Banned Accounts</p>
+                            <p class="text-2xl font-bold text-red-400" id="bannedAccounts">12,458</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6">
+                    <div class="flex items-center">
+                        <div class="bg-green-500 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-white text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-400">Active Players</p>
+                            <p class="text-2xl font-bold text-green-400" id="activePlayers">1,235,398</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-xl p-6">
+                    <div class="flex items-center">
+                        <div class="bg-yellow-500 p-3 rounded-full">
+                            <i class="fas fa-coins text-white text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-400">UC Transactions</p>
+                            <p class="text-2xl font-bold text-yellow-400" id="ucTransactions">89,234</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Section -->
+            <div class="glass-effect rounded-xl p-6 mb-8">
+                <h2 class="text-xl font-bold mb-6">
+                    <i class="fas fa-search mr-2 text-pubg-gold"></i>
+                    Player Search & Management
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Search Form -->
+                    <div class="lg:col-span-1">
+                        <form id="searchForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Player UID</label>
+                                <input type="text" id="playerUID" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-pubg-gold focus:outline-none" placeholder="Enter Player UID">
+                            </div>
+                            
+                            <button type="submit" class="w-full btn-pubg py-3 rounded-lg font-semibold">
+                                <i class="fas fa-search mr-2"></i>Search Player
+                            </button>
+                        </form>
+                        
+                        <!-- Quick Actions -->
+                        <div class="mt-6 space-y-3">
+                            <button onclick="showUCTopup()" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold transition-all">
+                                <i class="fas fa-coins mr-2"></i>UC Top-up
+                            </button>
+                            
+                            <button onclick="showBanManagement()" class="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg font-semibold transition-all">
+                                <i class="fas fa-hammer mr-2"></i>Ban Management
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Player Info -->
+                    <div class="lg:col-span-2">
+                        <div id="playerInfo" class="hidden">
+                            <div class="bg-gray-800 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="text-lg font-bold">Player Information</h3>
+                                    <span id="playerStatus" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 class="font-semibold mb-3">Basic Info</h4>
+                                        <div class="space-y-2 text-sm">
+                                            <div><span class="text-gray-400">UID:</span> <span id="displayUID"></span></div>
+                                            <div><span class="text-gray-400">Name:</span> <span id="playerName"></span></div>
+                                            <div><span class="text-gray-400">Level:</span> <span id="playerLevel"></span></div>
+                                            <div><span class="text-gray-400">Tier:</span> <span id="playerTier"></span></div>
+                                            <div><span class="text-gray-400">UC Balance:</span> <span id="ucBalance"></span></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <h4 class="font-semibold mb-3">Platform Connections</h4>
+                                        <div class="space-y-2 text-sm" id="platformConnections">
+                                            <!-- Platform connections will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-6">
+                                    <h4 class="font-semibold mb-3">Statistics</h4>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-blue-400" id="totalMatches">0</div>
+                                            <div class="text-xs text-gray-400">Total Matches</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-green-400" id="totalWins">0</div>
+                                            <div class="text-xs text-gray-400">Wins</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-red-400" id="totalKills">0</div>
+                                            <div class="text-xs text-gray-400">Kills</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-yellow-400" id="winRate">0%</div>
+                                            <div class="text-xs text-gray-400">Win Rate</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="noPlayerFound" class="hidden text-center py-12">
+                            <i class="fas fa-user-slash text-6xl text-gray-600 mb-4"></i>
+                            <p class="text-gray-400">Enter a Player UID to search</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="glass-effect rounded-xl p-6">
+                <h2 class="text-xl font-bold mb-6">
+                    <i class="fas fa-history mr-2 text-pubg-gold"></i>
+                    Recent Activities
+                </h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-left py-3 px-4">Time</th>
+                                <th class="text-left py-3 px-4">Player</th>
+                                <th class="text-left py-3 px-4">Action</th>
+                                <th class="text-left py-3 px-4">Status</th>
+                                <th class="text-left py-3 px-4">Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityLog">
+                            <!-- Activities will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UC Top-up Modal -->
+    <div id="ucTopupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="glass-effect rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">
+                    <i class="fas fa-coins mr-2 text-yellow-400"></i>UC Top-up
+                </h3>
+                <button onclick="closeModal('ucTopupModal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="ucTopupForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Player UID</label>
+                    <input type="text" id="ucPlayerUID" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-pubg-gold focus:outline-none" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">UC Amount</label>
+                    <select id="ucAmount" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-pubg-gold focus:outline-none">
+                        <option value="60">60 UC</option>
+                        <option value="300">300 UC</option>
+                        <option value="600">600 UC</option>
+                        <option value="1500">1500 UC</option>
+                        <option value="3000">3000 UC</option>
+                        <option value="8100">8100 UC</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold">
+                    <i class="fas fa-plus mr-2"></i>Add UC
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ban Management Modal -->
+    <div id="banModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="glass-effect rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">
+                    <i class="fas fa-hammer mr-2 text-red-400"></i>Ban Management
+                </h3>
+                <button onclick="closeModal('banModal')" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="banForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Player UID</label>
+                    <input type="text" id="banPlayerUID" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-pubg-gold focus:outline-none" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Action</label>
+                    <select id="banAction" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-pubg-gold focus:outline-none">
+                        <option value="ban">Ban Account</option>
+                        <option value="unban">Unban Account</option>
+                    </select>
+                </div>
+                
+                <div id="banReasonDiv">
+                    <label class="block text-sm font-medium mb-2">Reason</label>
+                    <select id="banReason" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-pubg-gold focus:outline-none">
+                        <option value="cheating">Cheating/Hacking</option>
+                        <option value="teaming">Teaming</option>
+                        <option value="toxic">Toxic Behavior</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg font-semibold">
+                    <i class="fas fa-gavel mr-2"></i>Execute Action
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50">
+        <div class="text-center">
+            <i class="fas fa-spinner fa-spin text-6xl text-pubg-gold mb-4"></i>
+            <p class="text-xl">Processing...</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const SUPABASE_URL = 'https://apkwrsrbhwujnjogwrci.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwa3dyc3JiaHd1am5qb2d3cmNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3NTYxODAsImV4cCI6MjA3MjMzMjE4MH0.T0-WlO8GCcOeGSuIMbirfDwbm3tQyb2VcFjWbJ5BDm8';
+        const PUBG_API_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJmODIzMmE2MC02OTlhLTAxM2UtNDhhOC00MjVkMGRiNDBlMGYiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNzU2NzU2Mjg2LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6InB1YmctYmFuLXVuYmFuIn0.xj5lKtMSbEdUKAO-ndFy900eCrRktDi5bsnfm8X_fTU';
+
+        // Initialize Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Valid username
+        const VALID_USERNAME = 'OPPER101';
+
+        // Platform icons mapping
+        const platformIcons = {
+            'steam': 'fab fa-steam',
+            'google': 'fab fa-google',
+            'facebook': 'fab fa-facebook',
+            'twitter': 'fab fa-twitter',
+            'line': 'fab fa-line',
+            'wechat': 'fab fa-weixin',
+            'qq': 'fab fa-qq',
+            'apple': 'fab fa-apple'
+        };
+
+        // Login handling
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            
+            if (username === VALID_USERNAME) {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                initializeDashboard();
+            } else {
+                alert('အသုံးပြုသူအမည် မှားနေပါသည်!');
+            }
+        });
+
+        // Initialize dashboard
+        function initializeDashboard() {
+            loadRecentActivities();
+            updateStats();
+        }
+
+        // Player search
+        document.getElementById('searchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const uid = document.getElementById('playerUID').value;
+            
+            if (!uid) {
+                alert('Player UID ထည့်သွင်းပါ!');
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Generate mock player data
+                const playerData = generateMockPlayerData(uid);
+                displayPlayerInfo(playerData);
+                
+                // Log activity
+                logActivity('Player Search', uid, 'Success');
+                
+            } catch (error) {
+                console.error('Error searching player:', error);
+                alert('Player ရှာဖွေရာတွင် ပြဿနာရှိပါသည်!');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Generate mock player data
+        function generateMockPlayerData(uid) {
+            const names = ['GamerPro123', 'PUBG_Master', 'SnipeKing', 'WinnerChicken', 'ElitePlayer'];
+            const tiers = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Crown', 'Ace', 'Conqueror'];
+            const platforms = ['steam', 'google', 'facebook', 'twitter'];
+            
+            const isBanned = Math.random() < 0.1; // 10% chance of being banned
+            
+            return {
+                uid: uid,
+                name: names[Math.floor(Math.random() * names.length)],
+                level: Math.floor(Math.random() * 100) + 1,
+                tier: tiers[Math.floor(Math.random() * tiers.length)],
+                ucBalance: Math.floor(Math.random() * 10000),
+                totalMatches: Math.floor(Math.random() * 1000) + 100,
+                totalWins: Math.floor(Math.random() * 200) + 10,
+                totalKills: Math.floor(Math.random() * 2000) + 500,
+                platforms: platforms.slice(0, Math.floor(Math.random() * 3) + 1),
+                isBanned: isBanned,
+                banReason: isBanned ? 'Cheating/Hacking' : null
+            };
+        }
+
+        // Display player information
+        function displayPlayerInfo(player) {
+            document.getElementById('noPlayerFound').classList.add('hidden');
+            document.getElementById('playerInfo').classList.remove('hidden');
+            
+            document.getElementById('displayUID').textContent = player.uid;
+            document.getElementById('playerName').textContent = player.name;
+            document.getElementById('playerLevel').textContent = player.level;
+            document.getElementById('playerTier').textContent = player.tier;
+            document.getElementById('ucBalance').textContent = player.ucBalance.toLocaleString() + ' UC';
+            
+            document.getElementById('totalMatches').textContent = player.totalMatches.toLocaleString();
+            document.getElementById('totalWins').textContent = player.totalWins.toLocaleString();
+            document.getElementById('totalKills').textContent = player.totalKills.toLocaleString();
+            document.getElementById('winRate').textContent = Math.round((player.totalWins / player.totalMatches) * 100) + '%';
+            
+            // Status
+            const statusEl = document.getElementById('playerStatus');
+            if (player.isBanned) {
+                statusEl.textContent = 'BANNED';
+                statusEl.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-600 text-white';
+            } else {
+                statusEl.textContent = 'ACTIVE';
+                statusEl.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-600 text-white';
+            }
+            
+            // Platform connections
+            const platformsEl = document.getElementById('platformConnections');
+            platformsEl.innerHTML = '';
+            
+            player.platforms.forEach(platform => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <i class="${platformIcons[platform] || 'fas fa-link'} mr-2 text-blue-400"></i>
+                    <span class="capitalize">${platform}</span>
+                    <span class="text-green-400 ml-2">Connected</span>
+                `;
+                platformsEl.appendChild(div);
+            });
+        }
+
+        // UC Top-up
+        document.getElementById('ucTopupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const uid = document.getElementById('ucPlayerUID').value;
+            const amount = document.getElementById('ucAmount').value;
+            
+            if (!uid) {
+                alert('Player UID ထည့်သွင်းပါ!');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                alert(`${amount} UC ကို Player ${uid} အတွက် အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ!`);
+                
+                logActivity('UC Top-up', uid, 'Success', `Added ${amount} UC`);
+                closeModal('ucTopupModal');
+                
+                // Reset form
+                document.getElementById('ucTopupForm').reset();
+                
+            } catch (error) {
+                alert('UC ထည့်သွင်းရာတွင် ပြဿနာရှိပါသည်!');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Ban Management
+        document.getElementById('banForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const uid = document.getElementById('banPlayerUID').value;
+            const action = document.getElementById('banAction').value;
+            const reason = document.getElementById('banReason').value;
+            
+            if (!uid) {
+                alert('Player UID ထည့်သွင်းပါ!');
+                return;
+            }
+            
+            const confirmation = confirm(`Are you sure you want to ${action} player ${uid}?`);
+            if (!confirmation) return;
+            
+            showLoading();
+            
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                const message = action === 'ban' 
+                    ? `Player ${uid} ကို ${reason} အတွက် အောင်မြင်စွာ Ban လုပ်ပြီးပါပြီ!`
+                    : `Player ${uid} ကို အောင်မြင်စွာ Unban လုပ်ပြီးပါပြီ!`;
+                
+                alert(message);
+                
+                logActivity(action === 'ban' ? 'Account Ban' : 'Account Unban', uid, 'Success', reason);
+                closeModal('banModal');
+                
+                // Reset form
+                document.getElementById('banForm').reset();
+                
+            } catch (error) {
+                alert('လုပ်ငန်းစဉ်တွင် ပြဿနာရှိပါသည်!');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Ban action change handler
+        document.getElementById('banAction').addEventListener('change', function() {
+            const reasonDiv = document.getElementById('banReasonDiv');
+            if (this.value === 'unban') {
+                reasonDiv.style.display = 'none';
+            } else {
+                reasonDiv.style.display = 'block';
+            }
+        });
+
+        // Modal functions
+        function showUCTopup() {
+            document.getElementById('ucTopupModal').classList.remove('hidden');
+        }
+
+        function showBanManagement() {
+            document.getElementById('banModal').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function logout() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('username').value = '';
+        }
+
+        // Log activity
+        function logActivity(action, player, status, details = '') {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            
+            activities.unshift({
+                time: new Date().toLocaleString(),
+                player: player,
+                action: action,
+                status: status,
+                admin: 'OPPER101',
+                details: details
+            });
+            
+            // Keep only last 50 activities
+            if (activities.length > 50) {
+                activities.splice(50);
+            }
+            
+            localStorage.setItem('activities', JSON.stringify(activities));
+            loadRecentActivities();
+        }
+
+        // Load recent activities
+        function loadRecentActivities() {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            const tbody = document.getElementById('activityLog');
+            
+            tbody.innerHTML = '';
+            
+            activities.slice(0, 10).forEach(activity => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-800 hover:bg-gray-800';
+                
+                const statusClass = activity.status === 'Success' ? 'text-green-400' : 'text-red-400';
+                
+                row.innerHTML = `
+                    <td class="py-3 px-4">${activity.time}</td>
+                    <td class="py-3 px-4">${activity.player}</td>
+                    <td class="py-3 px-4">${activity.action}</td>
+                    <td class="py-3 px-4 ${statusClass}">${activity.status}</td>
+                    <td class="py-3 px-4">${activity.admin}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // Add sample data if empty
+            if (activities.length === 0) {
+                const sampleActivities = [
+                    { time: new Date().toLocaleString(), player: '123456789', action: 'Player Search', status: 'Success', admin: 'OPPER101' },
+                    { time: new Date().toLocaleString(), player: '987654321', action: 'UC Top-up', status: 'Success', admin: 'OPPER101' },
+                    { time: new Date().toLocaleString(), player: '555666777', action: 'Account Ban', status: 'Success', admin: 'OPPER101' }
+                ];
+                
+                sampleActivities.forEach(activity => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-800 hover:bg-gray-800';
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${activity.time}</td>
+                        <td class="py-3 px-4">${activity.player}</td>
+                        <td class="py-3 px-4">${activity.action}</td>
+                        <td class="py-3 px-4 text-green-400">${activity.status}</td>
+                        <td class="py-3 px-4">${activity.admin}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            // Simulate real-time updates
+            setInterval(() => {
+                const totalPlayers = document.getElementById('totalPlayers');
+                const currentTotal = parseInt(totalPlayers.textContent.replace(/,/g, ''));
+                totalPlayers.textContent = (currentTotal + Math.floor(Math.random() * 10)).toLocaleString();
+            }, 30000);
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('fixed')) {
+                e.target.classList.add('hidden');
+            }
+        });
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show no player found by default
+            document.getElementById('noPlayerFound').classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
